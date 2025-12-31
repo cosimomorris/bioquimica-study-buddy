@@ -77,6 +77,17 @@ def test_isoelectric_point_aspartate():
     assert abs(result - 2.77) < 0.01
 
 
+def test_isoelectric_point_lysine():
+    """Basic amino acid uses two highest pKa values."""
+    from core.tools import isoelectric_point
+
+    # Lysine: pKa1=2.18, pKa2=8.95, pKa3=10.53
+    # pI = (8.95 + 10.53) / 2 = 9.74
+    result = isoelectric_point(pka_values=[2.18, 8.95, 10.53])
+
+    assert abs(result - 9.74) < 0.01
+
+
 def test_isoelectric_point_raises_on_insufficient_pkas():
     """Need at least 2 pKa values."""
     from core.tools import isoelectric_point
