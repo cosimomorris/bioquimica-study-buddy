@@ -55,3 +55,31 @@ def test_enzyme_kinetics_raises_on_invalid_params():
 
     with pytest.raises(ValueError):
         enzyme_kinetics(v_max=-100, km=10, substrate_conc=5)
+
+
+def test_isoelectric_point_glycine():
+    """Glycine pI is average of pKa1 (2.34) and pKa2 (9.60)."""
+    from core.tools import isoelectric_point
+
+    result = isoelectric_point(pka_values=[2.34, 9.60])
+
+    assert abs(result - 5.97) < 0.01
+
+
+def test_isoelectric_point_aspartate():
+    """Acidic amino acid uses two lowest pKa values."""
+    from core.tools import isoelectric_point
+
+    # Aspartate: pKa1=1.88, pKa2=3.65, pKa3=9.60
+    # pI = (1.88 + 3.65) / 2 = 2.77
+    result = isoelectric_point(pka_values=[1.88, 3.65, 9.60])
+
+    assert abs(result - 2.77) < 0.01
+
+
+def test_isoelectric_point_raises_on_insufficient_pkas():
+    """Need at least 2 pKa values."""
+    from core.tools import isoelectric_point
+
+    with pytest.raises(ValueError, match="[Aa]t least 2"):
+        isoelectric_point(pka_values=[4.5])
