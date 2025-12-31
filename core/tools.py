@@ -31,3 +31,33 @@ def calculate_ph(pka: float, acid_conc: float, base_conc: float) -> float:
         raise ValueError("Concentrations must be positive values")
 
     return pka + math.log10(base_conc / acid_conc)
+
+
+def enzyme_kinetics(v_max: float, km: float, substrate_conc: float) -> float:
+    """
+    Calculate reaction velocity using the Michaelis-Menten equation.
+
+    This tool computes the initial velocity of an enzyme-catalyzed reaction
+    given the kinetic parameters and substrate concentration.
+
+    Formula: v = (Vmax * [S]) / (Km + [S])
+
+    Args:
+        v_max: Maximum reaction velocity (Vmax) in appropriate units (e.g., umol/min).
+        km: Michaelis constant (Km) in mol/L or mM.
+        substrate_conc: Substrate concentration [S] in same units as Km.
+
+    Returns:
+        The calculated reaction velocity in same units as Vmax.
+
+    Raises:
+        ValueError: If any parameter is zero or negative.
+
+    Example:
+        >>> enzyme_kinetics(v_max=100, km=10, substrate_conc=10)
+        50.0  # At [S] = Km, velocity is Vmax/2
+    """
+    if v_max <= 0 or km <= 0 or substrate_conc <= 0:
+        raise ValueError("All parameters must be positive values")
+
+    return (v_max * substrate_conc) / (km + substrate_conc)

@@ -29,3 +29,29 @@ def test_calculate_ph_raises_on_zero_concentration():
 
     with pytest.raises(ValueError, match="must be positive"):
         calculate_ph(pka=4.76, acid_conc=0, base_conc=0.1)
+
+
+def test_enzyme_kinetics_half_vmax():
+    """When [S] = Km, velocity should be Vmax/2."""
+    from core.tools import enzyme_kinetics
+
+    result = enzyme_kinetics(v_max=100, km=10, substrate_conc=10)
+
+    assert abs(result - 50.0) < 0.01
+
+
+def test_enzyme_kinetics_high_substrate():
+    """At very high [S], velocity approaches Vmax."""
+    from core.tools import enzyme_kinetics
+
+    result = enzyme_kinetics(v_max=100, km=10, substrate_conc=1000)
+
+    assert result > 99.0  # Should be close to Vmax
+
+
+def test_enzyme_kinetics_raises_on_invalid_params():
+    """Negative or zero parameters should raise ValueError."""
+    from core.tools import enzyme_kinetics
+
+    with pytest.raises(ValueError):
+        enzyme_kinetics(v_max=-100, km=10, substrate_conc=5)
