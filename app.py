@@ -38,9 +38,12 @@ with st.sidebar:
             from core.client import get_client
             from core.rag_manager import RAGManager
 
-            st.session_state.client = get_client()
-            st.session_state.rag_manager = RAGManager(st.session_state.client)
-            st.success("Connected to Gemini!")
+            try:
+                st.session_state.client = get_client()
+                st.session_state.rag_manager = RAGManager(st.session_state.client)
+                st.success("Connected to Gemini!")
+            except Exception as e:
+                st.error(f"Connection failed: {e}")
 
     st.divider()
 
@@ -72,6 +75,8 @@ with st.sidebar:
                         display_name=uploaded_file.name
                     )
                     st.success(f"Indexed: {uploaded_file.name}")
+                except Exception as e:
+                    st.error(f"Indexing failed: {e}")
                 finally:
                     os.unlink(temp_path)
 
@@ -130,20 +135,24 @@ correlation (e.g., a specific disease related to an enzyme deficiency),
 highlight it in a 'Clinical Relevance' box."""
 
                 # Generate response
-                response = st.session_state.client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        tools=tools if tools else None
+                response = None
+                try:
+                    response = st.session_state.client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_instruction,
+                            tools=tools if tools else None
+                        )
                     )
-                )
+                    assistant_message = response.text if response.text else "I couldn't generate a response."
+                except Exception as e:
+                    assistant_message = f"Error: {e}"
 
-                assistant_message = response.text
                 st.markdown(assistant_message)
 
                 # Show citations if available
-                if hasattr(response, 'grounding_metadata') and response.grounding_metadata:
+                if response and hasattr(response, 'grounding_metadata') and response.grounding_metadata:
                     with st.expander("Sources"):
                         for source in response.grounding_metadata.get('sources', []):
                             st.write(f"- {source}")
