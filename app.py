@@ -2,8 +2,26 @@
 """Compañero de Estudio de Bioquímica - Aplicación Streamlit."""
 import os
 import re
+import requests
 import streamlit as st
+from streamlit_lottie import st_lottie
 from streamlit_mermaid import st_mermaid
+
+
+@st.cache_data
+def load_lottie_url(url: str):
+    """Cargar animación Lottie desde URL."""
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception:
+        return None
+
+
+# URL de animación de Rosalind (científica/tutora animada)
+ROSALIND_ANIMATION = "https://lottie.host/4db68bbd-31f6-4cd8-84eb-189571294bdc/jErSvT9haX.json"
 
 
 def render_message_with_diagrams(content: str):
@@ -115,8 +133,14 @@ with st.sidebar:
     use_pi_calc = st.checkbox("Punto Isoeléctrico", value=True)
 
 # Interfaz principal de chat
-st.title("🧬 Rosalind")
-st.caption("Tu tutora de bioquímica personal • Creada con 💕 por Cosimo para Jimena")
+col1, col2 = st.columns([1, 4])
+with col1:
+    lottie_rosalind = load_lottie_url(ROSALIND_ANIMATION)
+    if lottie_rosalind:
+        st_lottie(lottie_rosalind, height=120, key="rosalind_avatar")
+with col2:
+    st.title("🧬 Rosalind")
+    st.caption("Tu tutora de bioquímica personal • Creada con 💕 por Cosimo para Jimena")
 
 # Display chat history
 for message in st.session_state.messages:
