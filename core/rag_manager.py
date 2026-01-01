@@ -22,7 +22,7 @@ class RAGManager:
         self.client = client
         self.store = None
 
-    def create_store(self, display_name: str):
+    def create_store(self, display_name: str) -> types.FileSearchStore:
         """
         Create a new file search store.
 

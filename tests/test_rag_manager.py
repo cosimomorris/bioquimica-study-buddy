@@ -15,7 +15,7 @@ def test_create_file_search_store():
     manager = RAGManager(client=mock_client)
     store = manager.create_store(display_name="biochemistry-notes")
 
-    mock_client.file_search_stores.create.assert_called_once()
+    mock_client.file_search_stores.create.assert_called_once_with(config={"display_name": "biochemistry-notes"})
     assert store.name == "stores/test-store-123"
 
 
