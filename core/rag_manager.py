@@ -1,6 +1,7 @@
 # core/rag_manager.py
 """RAG Manager for Gemini File Search stores."""
 import time
+from typing import Any
 
 from google import genai
 from google.genai import types
@@ -24,7 +25,7 @@ class RAGManager:
         self.client = client
         self.store = None
 
-    def create_store(self, display_name: str) -> types.FileSearchStore:
+    def create_store(self, display_name: str) -> Any:
         """
         Create a new file search store.
 

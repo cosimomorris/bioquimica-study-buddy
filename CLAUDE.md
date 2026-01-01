@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 BioChem Study Buddy is a Streamlit-based AI tutor for medical students using Google Gemini 3 for reasoning, Managed File Search for RAG (textbooks/lecture notes), and Function Calling for biochemical calculations.
 
-**Current Status:** Early-stage project with implementation plan only. Code must be built from scratch.
+**Current Status:** Functional implementation with core features complete.
 
 ## Tech Stack
 
@@ -14,16 +14,23 @@ BioChem Study Buddy is a Streamlit-based AI tutor for medical students using Goo
 - **UI:** Streamlit
 - **RAG:** Gemini Managed File Search (Vector Store)
 - **Tools:** Python function calling + Google Search grounding
-- **Dependencies:** google-genai, streamlit, python-dotenv, reactome2py
+- **Dependencies:** google-genai, streamlit, pytest
 
-## Commands
+## Setup
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
+# Configure API key (copy template and add your key)
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+# Edit .streamlit/secrets.toml with your Google API key
+
 # Run the application
 streamlit run app.py
+
+# Run tests
+pytest
 ```
 
 ## Architecture
@@ -38,7 +45,10 @@ biochem-study-buddy/
 ├── assets/               # CSS/styles
 ├── data/                 # Temporary PDF storage
 ├── requirements.txt
-└── .env                  # GOOGLE_API_KEY
+├── .streamlit/
+│   ├── secrets.toml          # GOOGLE_API_KEY (git-ignored)
+│   └── secrets.toml.example  # Template for secrets
+└── tests/                    # pytest test suite
 ```
 
 ### Key Components
@@ -56,7 +66,8 @@ All tool functions require clear docstrings as Gemini uses them to understand wh
 - Model uses `file_search_stores` parameter in generation config
 
 **Streamlit App (`app.py`):**
-- Sidebar: API key input, PDF uploader, tool toggles
+- API key loaded from `.streamlit/secrets.toml` via `st.secrets`
+- Sidebar: PDF uploader, tool toggles
 - Chat interface: `st.chat_message` + `st.chat_input`
 - Citation extraction from `grounding_metadata`
 
@@ -65,14 +76,6 @@ All tool functions require clear docstrings as Gemini uses them to understand wh
 The app uses this system prompt for medical accuracy:
 
 > "You are an expert Biochemistry Professor for medical students. You provide answers grounded in the provided textbooks. When asked for calculations, you MUST use the provided calculation tools rather than doing math yourself. Always cite your sources using [Source Name] format. If a concept has a clinical correlation (e.g., a specific disease related to an enzyme deficiency), highlight it in a 'Clinical Relevance' box."
-
-## Implementation Order
-
-1. Environment setup + `requirements.txt` + `.env` template
-2. Biochemistry tools in `core/tools.py` with docstrings
-3. RAG manager in `core/rag_manager.py`
-4. Streamlit app integrating tools and RAG
-5. UI enhancements (thought process expanders, citation view)
 
 ## Test Cases
 

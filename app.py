@@ -1,9 +1,7 @@
 # app.py
 """BioChem Study Buddy - Streamlit Application."""
+import os
 import streamlit as st
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Page configuration
 st.set_page_config(
@@ -11,6 +9,14 @@ st.set_page_config(
     page_icon="🧬",
     layout="wide"
 )
+
+# Load API key from secrets.toml
+try:
+    api_key = st.secrets["GOOGLE_API_KEY"]
+    os.environ["GOOGLE_API_KEY"] = api_key
+except KeyError:
+    st.error("Missing API key. Create `.streamlit/secrets.toml` with:\n\n```\nGOOGLE_API_KEY = \"your_key_here\"\n```")
+    st.stop()
 
 # Session state initialization
 if "messages" not in st.session_state:
@@ -20,31 +26,22 @@ if "client" not in st.session_state:
 if "rag_manager" not in st.session_state:
     st.session_state.rag_manager = None
 
+# Initialize client once
+if st.session_state.client is None:
+    from core.client import get_client
+    from core.rag_manager import RAGManager
+
+    try:
+        st.session_state.client = get_client()
+        st.session_state.rag_manager = RAGManager(st.session_state.client)
+    except Exception as e:
+        st.error(f"Connection failed: {e}")
+        st.stop()
+
 # Sidebar
 with st.sidebar:
     st.header("Configuration")
-
-    api_key = st.text_input(
-        "Google API Key",
-        type="password",
-        help="Enter your Gemini API key"
-    )
-
-    if api_key:
-        import os
-        os.environ["GOOGLE_API_KEY"] = api_key
-
-        if st.session_state.client is None:
-            from core.client import get_client
-            from core.rag_manager import RAGManager
-
-            try:
-                st.session_state.client = get_client()
-                st.session_state.rag_manager = RAGManager(st.session_state.client)
-                st.success("Connected to Gemini!")
-            except Exception as e:
-                st.error(f"Connection failed: {e}")
-
+    st.success("Connected to Gemini!")
     st.divider()
 
     # PDF Upload
@@ -99,62 +96,59 @@ for message in st.session_state.messages:
 
 # Chat input
 if prompt := st.chat_input("Ask a biochemistry question..."):
-    if not st.session_state.client:
-        st.error("Please enter your API key in the sidebar first.")
-    else:
-        # Add user message
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+    # Add user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-        # Generate response
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                from google.genai import types
-                from core.tools import calculate_ph, enzyme_kinetics, isoelectric_point
+    # Generate response
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            from google.genai import types
+            from core.tools import calculate_ph, enzyme_kinetics, isoelectric_point
 
-                # Build tools list based on toggles
-                tools = []
-                if use_ph_calc:
-                    tools.append(calculate_ph)
-                if use_kinetics:
-                    tools.append(enzyme_kinetics)
-                if use_pi_calc:
-                    tools.append(isoelectric_point)
+            # Build tools list based on toggles
+            tools = []
+            if use_ph_calc:
+                tools.append(calculate_ph)
+            if use_kinetics:
+                tools.append(enzyme_kinetics)
+            if use_pi_calc:
+                tools.append(isoelectric_point)
 
-                # Add RAG tool if available
-                if st.session_state.rag_manager and st.session_state.rag_manager.store:
-                    tools.append(st.session_state.rag_manager.get_file_search_tool())
+            # Add RAG tool if available
+            if st.session_state.rag_manager and st.session_state.rag_manager.store:
+                tools.append(st.session_state.rag_manager.get_file_search_tool())
 
-                # System prompt
-                system_instruction = """You are an expert Biochemistry Professor for medical students.
+            # System prompt
+            system_instruction = """You are an expert Biochemistry Professor for medical students.
 You provide answers grounded in the provided textbooks. When asked for calculations,
 you MUST use the provided calculation tools rather than doing math yourself.
 Always cite your sources using [Source Name] format. If a concept has a clinical
 correlation (e.g., a specific disease related to an enzyme deficiency),
 highlight it in a 'Clinical Relevance' box."""
 
-                # Generate response
-                response = None
-                try:
-                    response = st.session_state.client.models.generate_content(
-                        model="gemini-2.5-flash",
-                        contents=prompt,
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_instruction,
-                            tools=tools if tools else None
-                        )
+            # Generate response
+            response = None
+            try:
+                response = st.session_state.client.models.generate_content(
+                    model="gemini-3-pro-preview",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        tools=tools if tools else None
                     )
-                    assistant_message = response.text if response.text else "I couldn't generate a response."
-                except Exception as e:
-                    assistant_message = f"Error: {e}"
+                )
+                assistant_message = response.text if response.text else "I couldn't generate a response."
+            except Exception as e:
+                assistant_message = f"Error: {e}"
 
-                st.markdown(assistant_message)
+            st.markdown(assistant_message)
 
-                # Show citations if available
-                if response and hasattr(response, 'grounding_metadata') and response.grounding_metadata:
-                    with st.expander("Sources"):
-                        for source in response.grounding_metadata.get('sources', []):
-                            st.write(f"- {source}")
+            # Show citations if available
+            if response and hasattr(response, 'grounding_metadata') and response.grounding_metadata:
+                with st.expander("Sources"):
+                    for source in response.grounding_metadata.get('sources', []):
+                        st.write(f"- {source}")
 
-        st.session_state.messages.append({"role": "assistant", "content": assistant_message})
+    st.session_state.messages.append({"role": "assistant", "content": assistant_message})
