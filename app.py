@@ -126,20 +126,20 @@ for message in st.session_state.messages:
         else:
             st.markdown(message["content"])
 
-# Chat input
-if prompt := st.chat_input("Ask a biochemistry question..."):
-    # Add user message
+# Entrada de chat
+if prompt := st.chat_input("Haz una pregunta de bioquímica..."):
+    # Agregar mensaje del usuario
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Generate response
+    # Generar respuesta
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
+        with st.spinner("Pensando..."):
             from google.genai import types
             from core.tools import calculate_ph, enzyme_kinetics, isoelectric_point
 
-            # Build tools list based on toggles
+            # Construir lista de herramientas según toggles
             tools = []
             if use_ph_calc:
                 tools.append(calculate_ph)
@@ -148,24 +148,27 @@ if prompt := st.chat_input("Ask a biochemistry question..."):
             if use_pi_calc:
                 tools.append(isoelectric_point)
 
-            # Add RAG tool if available
+            # Agregar herramienta RAG si está disponible
             if st.session_state.rag_manager and st.session_state.rag_manager.store:
                 tools.append(st.session_state.rag_manager.get_file_search_tool())
 
-            # System prompt
-            system_instruction = """You are an expert Biochemistry Professor for medical students.
-You provide answers grounded in the provided textbooks. When asked for calculations,
-you MUST use the provided calculation tools rather than doing math yourself.
-Always cite your sources using [Source Name] format. If a concept has a clinical
-correlation (e.g., a specific disease related to an enzyme deficiency),
-highlight it in a 'Clinical Relevance' box.
+            # Prompt del sistema en español
+            system_instruction = """Eres un Profesor experto en Bioquímica para estudiantes de medicina.
+Proporcionas respuestas fundamentadas en los libros de texto proporcionados.
+Cuando te pidan cálculos, DEBES usar las herramientas de cálculo proporcionadas
+en lugar de hacer las matemáticas tú mismo.
+Siempre cita tus fuentes usando el formato [Nombre de la Fuente].
+Si un concepto tiene correlación clínica (por ejemplo, una enfermedad específica
+relacionada con una deficiencia enzimática), resáltalo en un cuadro de 'Relevancia Clínica'.
 
-When explaining metabolic pathways, reaction mechanisms, enzyme cascades, or
-biological processes, include a Mermaid diagram to visualize the concept.
-Use ```mermaid code blocks with graph TD (top-down) or graph LR (left-right) syntax.
-Keep diagrams clear and focused on the key steps."""
+Cuando expliques vías metabólicas, mecanismos de reacción, cascadas enzimáticas
+o procesos biológicos, incluye un diagrama Mermaid para visualizar el concepto.
+Usa bloques de código ```mermaid con sintaxis graph TD (arriba-abajo) o graph LR (izquierda-derecha).
+Mantén los diagramas claros y enfocados en los pasos clave.
 
-            # Generate response
+IMPORTANTE: Responde siempre en español."""
+
+            # Generar respuesta
             response = None
             try:
                 response = st.session_state.client.models.generate_content(
@@ -176,15 +179,15 @@ Keep diagrams clear and focused on the key steps."""
                         tools=tools if tools else None
                     )
                 )
-                assistant_message = response.text if response.text else "I couldn't generate a response."
+                assistant_message = response.text if response.text else "No pude generar una respuesta."
             except Exception as e:
                 assistant_message = f"Error: {e}"
 
             render_message_with_diagrams(assistant_message)
 
-            # Show citations if available
+            # Mostrar citas si están disponibles
             if response and hasattr(response, 'grounding_metadata') and response.grounding_metadata:
-                with st.expander("Sources"):
+                with st.expander("Fuentes"):
                     for source in response.grounding_metadata.get('sources', []):
                         st.write(f"- {source}")
 
