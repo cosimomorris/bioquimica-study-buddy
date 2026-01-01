@@ -126,7 +126,12 @@ You provide answers grounded in the provided textbooks. When asked for calculati
 you MUST use the provided calculation tools rather than doing math yourself.
 Always cite your sources using [Source Name] format. If a concept has a clinical
 correlation (e.g., a specific disease related to an enzyme deficiency),
-highlight it in a 'Clinical Relevance' box."""
+highlight it in a 'Clinical Relevance' box.
+
+When explaining metabolic pathways, reaction mechanisms, enzyme cascades, or
+biological processes, include a Mermaid diagram to visualize the concept.
+Use ```mermaid code blocks with graph TD (top-down) or graph LR (left-right) syntax.
+Keep diagrams clear and focused on the key steps."""
 
             # Generate response
             response = None
