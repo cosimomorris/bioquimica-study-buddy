@@ -1,5 +1,5 @@
 # app.py
-"""BioChem Study Buddy - Streamlit Application."""
+"""Compañero de Estudio de Bioquímica - Aplicación Streamlit."""
 import os
 import re
 import streamlit as st
@@ -23,19 +23,19 @@ def render_message_with_diagrams(content: str):
             st_mermaid(part.strip())
 
 
-# Page configuration
+# Configuración de página
 st.set_page_config(
-    page_title="BioChem Study Buddy",
+    page_title="Compañero de Bioquímica",
     page_icon="🧬",
     layout="wide"
 )
 
-# Load API key from secrets.toml
+# Cargar API key desde secrets.toml
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
     os.environ["GOOGLE_API_KEY"] = api_key
 except KeyError:
-    st.error("Missing API key. Create `.streamlit/secrets.toml` with:\n\n```\nGOOGLE_API_KEY = \"your_key_here\"\n```")
+    st.error("Falta la API key. Crea `.streamlit/secrets.toml` con:\n\n```\nGOOGLE_API_KEY = \"tu_api_key_aqui\"\n```")
     st.stop()
 
 # Session state initialization
@@ -48,7 +48,7 @@ if "rag_manager" not in st.session_state:
 if "store_loaded" not in st.session_state:
     st.session_state.store_loaded = False
 
-# Initialize client once
+# Inicializar cliente una vez
 if st.session_state.client is None:
     from core.client import get_client
     from core.rag_manager import RAGManager
@@ -56,35 +56,35 @@ if st.session_state.client is None:
     try:
         st.session_state.client = get_client()
         st.session_state.rag_manager = RAGManager(st.session_state.client)
-        # Try to load existing document store
+        # Intentar cargar almacén de documentos existente
         if st.session_state.rag_manager.load_existing_store():
             st.session_state.store_loaded = True
     except Exception as e:
-        st.error(f"Connection failed: {e}")
+        st.error(f"Error de conexión: {e}")
         st.stop()
 
-# Sidebar
+# Barra lateral
 with st.sidebar:
-    st.header("Configuration")
-    st.success("Connected to Gemini!")
+    st.header("Configuración")
+    st.success("¡Conectado a Gemini!")
 
-    # Show document store status
+    # Mostrar estado del almacén de documentos
     if st.session_state.store_loaded:
-        st.info("📚 Document store loaded from previous session")
+        st.info("📚 Documentos cargados de la sesión anterior")
     st.divider()
 
-    # PDF Upload
-    st.subheader("Upload Documents")
+    # Subir PDFs
+    st.subheader("Subir Documentos")
     uploaded_file = st.file_uploader(
-        "Upload PDF textbooks or notes",
+        "Sube libros de texto o apuntes en PDF",
         type=["pdf", "txt", "md"],
-        help="Documents will be indexed for RAG"
+        help="Los documentos serán indexados para búsqueda"
     )
 
     if uploaded_file and st.session_state.rag_manager:
-        if st.button("Index Document"):
-            with st.spinner("Indexing document..."):
-                # Save to temp file and upload
+        if st.button("Indexar Documento"):
+            with st.spinner("Indexando documento..."):
+                # Guardar en archivo temporal y subir
                 import tempfile
                 import os
 
@@ -94,29 +94,29 @@ with st.sidebar:
 
                 try:
                     if st.session_state.rag_manager.store is None:
-                        st.session_state.rag_manager.create_store("biochem-study-buddy")
+                        st.session_state.rag_manager.create_store("bioquimica-study-buddy")
 
                     st.session_state.rag_manager.upload_file(
                         file_path=temp_path,
                         display_name=uploaded_file.name
                     )
-                    st.success(f"Indexed: {uploaded_file.name}")
+                    st.success(f"Indexado: {uploaded_file.name}")
                 except Exception as e:
-                    st.error(f"Indexing failed: {e}")
+                    st.error(f"Error al indexar: {e}")
                 finally:
                     os.unlink(temp_path)
 
     st.divider()
 
-    # Tool toggles
-    st.subheader("Calculator Tools")
-    use_ph_calc = st.checkbox("pH Calculator", value=True)
-    use_kinetics = st.checkbox("Enzyme Kinetics", value=True)
-    use_pi_calc = st.checkbox("Isoelectric Point", value=True)
+    # Herramientas de cálculo
+    st.subheader("Calculadoras")
+    use_ph_calc = st.checkbox("Calculadora de pH", value=True)
+    use_kinetics = st.checkbox("Cinética Enzimática", value=True)
+    use_pi_calc = st.checkbox("Punto Isoeléctrico", value=True)
 
-# Main chat interface
-st.title("🧬 BioChem Study Buddy")
-st.caption("AI-powered biochemistry tutor for medical students")
+# Interfaz principal de chat
+st.title("🧬 Compañero de Estudio de Bioquímica")
+st.caption("Tutor de bioquímica con IA para estudiantes de medicina")
 
 # Display chat history
 for message in st.session_state.messages:
