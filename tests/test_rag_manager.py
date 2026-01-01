@@ -114,3 +114,33 @@ def test_upload_file_raises_on_timeout():
     with patch('core.rag_manager.time.sleep'):
         with pytest.raises(TimeoutError):
             manager.upload_file(file_path="/path/to/file.pdf", display_name="test", timeout=5)
+
+
+def test_get_file_search_tool():
+    """Should return Tool config for generate_content."""
+    mock_client = MagicMock()
+    mock_store = MagicMock()
+    mock_store.name = "stores/test-store-123"
+    mock_client.file_search_stores.create.return_value = mock_store
+
+    from core.rag_manager import RAGManager
+
+    manager = RAGManager(client=mock_client)
+    manager.create_store("test-store")
+
+    tool = manager.get_file_search_tool()
+
+    assert tool.file_search is not None
+    assert "stores/test-store-123" in tool.file_search.file_search_store_names
+
+
+def test_get_file_search_tool_raises_without_store():
+    """Should raise error if no store exists."""
+    mock_client = MagicMock()
+
+    from core.rag_manager import RAGManager
+
+    manager = RAGManager(client=mock_client)
+
+    with pytest.raises(ValueError, match="store must be created"):
+        manager.get_file_search_tool()

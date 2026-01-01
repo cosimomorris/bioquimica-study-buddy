@@ -74,3 +74,22 @@ class RAGManager:
             raise TimeoutError(f"File upload did not complete within {timeout} seconds")
 
         return True
+
+    def get_file_search_tool(self) -> types.Tool:
+        """
+        Get the File Search tool configuration for generate_content.
+
+        Returns:
+            types.Tool configured with the current file search store.
+
+        Raises:
+            ValueError: If no store has been created yet.
+        """
+        if self.store is None:
+            raise ValueError("A file search store must be created first")
+
+        return types.Tool(
+            file_search=types.FileSearch(
+                file_search_store_names=[self.store.name]
+            )
+        )
