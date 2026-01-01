@@ -20,8 +20,8 @@ def load_lottie_url(url: str):
         return None
 
 
-# URL de animación de Rosalind (científica/tutora animada)
-ROSALIND_ANIMATION = "https://lottie.host/4db68bbd-31f6-4cd8-84eb-189571294bdc/jErSvT9haX.json"
+# URL de animación de Rosalind (robot/asistente animado)
+ROSALIND_ANIMATION = "https://assets5.lottiefiles.com/packages/lf20_tutvdkg0.json"
 
 
 def render_message_with_diagrams(content: str):
@@ -138,6 +138,8 @@ with col1:
     lottie_rosalind = load_lottie_url(ROSALIND_ANIMATION)
     if lottie_rosalind:
         st_lottie(lottie_rosalind, height=120, key="rosalind_avatar")
+    else:
+        st.markdown("## 👩‍🔬")  # Fallback si no carga la animación
 with col2:
     st.title("🧬 Rosalind")
     st.caption("Tu tutora de bioquímica personal • Creada con 💕 por Cosimo para Jimena")
