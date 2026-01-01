@@ -45,6 +45,8 @@ if "client" not in st.session_state:
     st.session_state.client = None
 if "rag_manager" not in st.session_state:
     st.session_state.rag_manager = None
+if "store_loaded" not in st.session_state:
+    st.session_state.store_loaded = False
 
 # Initialize client once
 if st.session_state.client is None:
@@ -54,6 +56,9 @@ if st.session_state.client is None:
     try:
         st.session_state.client = get_client()
         st.session_state.rag_manager = RAGManager(st.session_state.client)
+        # Try to load existing document store
+        if st.session_state.rag_manager.load_existing_store():
+            st.session_state.store_loaded = True
     except Exception as e:
         st.error(f"Connection failed: {e}")
         st.stop()
@@ -62,6 +67,10 @@ if st.session_state.client is None:
 with st.sidebar:
     st.header("Configuration")
     st.success("Connected to Gemini!")
+
+    # Show document store status
+    if st.session_state.store_loaded:
+        st.info("📚 Document store loaded from previous session")
     st.divider()
 
     # PDF Upload

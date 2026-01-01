@@ -1,10 +1,16 @@
 # core/rag_manager.py
 """RAG Manager for Gemini File Search stores."""
+import json
+import os
 import time
-from typing import Any
+from pathlib import Path
+from typing import Any, Optional
 
 from google import genai
 from google.genai import types
+
+# Default path for storing RAG configuration
+DEFAULT_CONFIG_PATH = Path(".streamlit/rag_store.json")
 
 
 class RAGManager:
@@ -13,21 +19,57 @@ class RAGManager:
 
     Handles creation of file search stores, file uploads, and
     provides the tool configuration for generate_content calls.
+    Supports persistence across sessions.
     """
 
-    def __init__(self, client: genai.Client):
+    def __init__(self, client: genai.Client, config_path: Optional[Path] = None):
         """
         Initialize RAG Manager with a Gemini client.
 
         Args:
             client: Configured Gemini client instance.
+            config_path: Path to store configuration file (default: .streamlit/rag_store.json)
         """
         self.client = client
         self.store = None
+        self.store_name: Optional[str] = None
+        self.config_path = config_path or DEFAULT_CONFIG_PATH
+
+    def load_existing_store(self) -> bool:
+        """
+        Load an existing store from saved configuration.
+
+        Returns:
+            True if store was loaded successfully, False otherwise.
+        """
+        if not self.config_path.exists():
+            return False
+
+        try:
+            with open(self.config_path) as f:
+                config = json.load(f)
+
+            store_name = config.get("store_name")
+            if not store_name:
+                return False
+
+            # Verify the store still exists on Gemini
+            self.store = self.client.file_search_stores.get(name=store_name)
+            self.store_name = store_name
+            return True
+        except Exception:
+            # Store doesn't exist anymore or config is invalid
+            return False
+
+    def _save_config(self):
+        """Save store configuration to disk."""
+        self.config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.config_path, "w") as f:
+            json.dump({"store_name": self.store_name}, f)
 
     def create_store(self, display_name: str) -> Any:
         """
-        Create a new file search store.
+        Create a new file search store and save configuration.
 
         Args:
             display_name: Human-readable name for the store.
@@ -38,6 +80,8 @@ class RAGManager:
         self.store = self.client.file_search_stores.create(
             config={"display_name": display_name}
         )
+        self.store_name = self.store.name
+        self._save_config()
         return self.store
 
     def upload_file(self, file_path: str, display_name: str, timeout: int = 300) -> bool:
