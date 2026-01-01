@@ -1,7 +1,26 @@
 # app.py
 """BioChem Study Buddy - Streamlit Application."""
 import os
+import re
 import streamlit as st
+
+
+def render_message_with_diagrams(content: str):
+    """Render message content, converting Mermaid blocks to diagrams."""
+    # Pattern to match ```mermaid ... ``` blocks
+    pattern = r'```mermaid\s*([\s\S]*?)```'
+
+    parts = re.split(pattern, content)
+
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            # Text content
+            if part.strip():
+                st.markdown(part)
+        else:
+            # Mermaid diagram
+            st.markdown(f"```mermaid\n{part.strip()}\n```")
+
 
 # Page configuration
 st.set_page_config(
@@ -92,7 +111,10 @@ st.caption("AI-powered biochemistry tutor for medical students")
 # Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        if message["role"] == "assistant":
+            render_message_with_diagrams(message["content"])
+        else:
+            st.markdown(message["content"])
 
 # Chat input
 if prompt := st.chat_input("Ask a biochemistry question..."):
@@ -148,7 +170,7 @@ Keep diagrams clear and focused on the key steps."""
             except Exception as e:
                 assistant_message = f"Error: {e}"
 
-            st.markdown(assistant_message)
+            render_message_with_diagrams(assistant_message)
 
             # Show citations if available
             if response and hasattr(response, 'grounding_metadata') and response.grounding_metadata:
