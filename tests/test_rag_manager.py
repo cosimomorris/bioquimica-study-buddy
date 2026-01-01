@@ -60,3 +60,57 @@ def test_upload_file_raises_without_store():
 
     with pytest.raises(ValueError, match="store must be created"):
         manager.upload_file(file_path="/path/to/file.pdf", display_name="test")
+
+
+def test_upload_file_polls_until_complete():
+    """Should poll operation until done."""
+    mock_client = MagicMock()
+    mock_store = MagicMock()
+    mock_store.name = "stores/test-store-123"
+    mock_client.file_search_stores.create.return_value = mock_store
+
+    # Operation starts not done, then becomes done after poll
+    mock_operation = MagicMock()
+    mock_operation.done = False
+    mock_client.file_search_stores.upload_to_file_search_store.return_value = mock_operation
+
+    # After first poll, operation is done
+    mock_polled_operation = MagicMock()
+    mock_polled_operation.done = True
+    mock_client.operations.get.return_value = mock_polled_operation
+
+    from core.rag_manager import RAGManager
+
+    manager = RAGManager(client=mock_client)
+    manager.create_store("test-store")
+
+    # Mock time.sleep to avoid waiting
+    with patch('core.rag_manager.time.sleep'):
+        result = manager.upload_file(file_path="/path/to/file.pdf", display_name="test")
+
+    assert result is True
+    mock_client.operations.get.assert_called()
+
+
+def test_upload_file_raises_on_timeout():
+    """Should raise TimeoutError if operation never completes."""
+    mock_client = MagicMock()
+    mock_store = MagicMock()
+    mock_store.name = "stores/test-store-123"
+    mock_client.file_search_stores.create.return_value = mock_store
+
+    # Operation never completes
+    mock_operation = MagicMock()
+    mock_operation.done = False
+    mock_client.file_search_stores.upload_to_file_search_store.return_value = mock_operation
+    mock_client.operations.get.return_value = mock_operation
+
+    from core.rag_manager import RAGManager
+
+    manager = RAGManager(client=mock_client)
+    manager.create_store("test-store")
+
+    # Mock time.sleep and use short timeout
+    with patch('core.rag_manager.time.sleep'):
+        with pytest.raises(TimeoutError):
+            manager.upload_file(file_path="/path/to/file.pdf", display_name="test", timeout=5)
