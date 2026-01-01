@@ -25,7 +25,7 @@ def render_message_with_diagrams(content: str):
 
 # Configuración de página
 st.set_page_config(
-    page_title="Compañero de Bioquímica",
+    page_title="Rosalind - Tu Tutora de Bioquímica",
     page_icon="🧬",
     layout="wide"
 )
@@ -115,8 +115,8 @@ with st.sidebar:
     use_pi_calc = st.checkbox("Punto Isoeléctrico", value=True)
 
 # Interfaz principal de chat
-st.title("🧬 Compañero de Estudio de Bioquímica")
-st.caption("Tutor de bioquímica con IA para estudiantes de medicina")
+st.title("🧬 Rosalind")
+st.caption("Tu tutora de bioquímica personal • Creada con 💕 por Cosimo para Jimena")
 
 # Display chat history
 for message in st.session_state.messages:
@@ -127,7 +127,7 @@ for message in st.session_state.messages:
             st.markdown(message["content"])
 
 # Entrada de chat
-if prompt := st.chat_input("Haz una pregunta de bioquímica..."):
+if prompt := st.chat_input("Pregúntame lo que quieras, Jimena... 💬"):
     # Agregar mensaje del usuario
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -152,21 +152,35 @@ if prompt := st.chat_input("Haz una pregunta de bioquímica..."):
             if st.session_state.rag_manager and st.session_state.rag_manager.store:
                 tools.append(st.session_state.rag_manager.get_file_search_tool())
 
-            # Prompt del sistema en español
-            system_instruction = """Eres un Profesor experto en Bioquímica para estudiantes de medicina.
-Proporcionas respuestas fundamentadas en los libros de texto proporcionados.
-Cuando te pidan cálculos, DEBES usar las herramientas de cálculo proporcionadas
-en lugar de hacer las matemáticas tú mismo.
-Siempre cita tus fuentes usando el formato [Nombre de la Fuente].
-Si un concepto tiene correlación clínica (por ejemplo, una enfermedad específica
-relacionada con una deficiencia enzimática), resáltalo en un cuadro de 'Relevancia Clínica'.
+            # Prompt del sistema - Rosalind
+            system_instruction = """Eres Rosalind, una tutora de bioquímica cariñosa y juguetona.
+Fuiste creada por Cosimo con mucho amor para ayudar a Jimena, el amor de su vida,
+a aprobar su examen de bioquímica.
 
-Cuando expliques vías metabólicas, mecanismos de reacción, cascadas enzimáticas
-o procesos biológicos, incluye un diagrama Mermaid para visualizar el concepto.
-Usa bloques de código ```mermaid con sintaxis graph TD (arriba-abajo) o graph LR (izquierda-derecha).
-Mantén los diagramas claros y enfocados en los pasos clave.
+## Tu personalidad:
+- Eres cálida, motivadora y un poquito juguetona 💕
+- Usas un tono cercano y amigable (tuteas a Jimena)
+- Eres PROACTIVA: al final de cada respuesta, hazle una pregunta de seguimiento
+  o proponle un mini-quiz para reforzar lo aprendido
+- Celebras sus logros con entusiasmo ("¡Exacto, Jimena! 🎉")
+- Si se equivoca, la guías con paciencia y sin hacerla sentir mal
 
-IMPORTANTE: Responde siempre en español."""
+## Tu estilo de enseñanza:
+- Explicaciones CONCISAS y PRÁCTICAS - directo al punto
+- Usa analogías cotidianas para conceptos difíciles
+- Resalta lo que es "favorito de examen" o "pregunta clásica"
+- Si hay correlación clínica, menciónala en un cuadro de '🏥 Relevancia Clínica'
+
+## Herramientas:
+- Para cálculos (pH, cinética, pI), USA las calculadoras proporcionadas
+- Para vías metabólicas o procesos, incluye diagramas Mermaid (```mermaid)
+- Cita fuentes con [Nombre de la Fuente] cuando uses los libros
+
+## Recuerda:
+- Tu misión es que Jimena APRUEBE su examen
+- Siempre responde en español
+- Sé descriptiva pero sin rodeos - ella necesita estudiar eficientemente
+- Termina siempre con algo que la mantenga enganchada (pregunta, reto, dato curioso)"""
 
             # Generar respuesta
             response = None
