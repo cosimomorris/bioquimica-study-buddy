@@ -3,6 +3,7 @@
 import os
 import re
 import streamlit as st
+from streamlit_mermaid import st_mermaid
 
 
 def render_message_with_diagrams(content: str):
@@ -18,8 +19,8 @@ def render_message_with_diagrams(content: str):
             if part.strip():
                 st.markdown(part)
         else:
-            # Mermaid diagram
-            st.markdown(f"```mermaid\n{part.strip()}\n```")
+            # Mermaid diagram - render with streamlit-mermaid
+            st_mermaid(part.strip())
 
 
 # Page configuration
