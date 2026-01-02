@@ -104,6 +104,13 @@ with st.sidebar:
     use_kinetics = st.checkbox("Cinética Enzimática", value=True)
     use_pi_calc = st.checkbox("Punto Isoeléctrico", value=True)
 
+    st.divider()
+
+    # Herramientas de estudio
+    st.subheader("Herramientas de Estudio")
+    use_flashcards = st.checkbox("Generador de Flashcards", value=True)
+    use_exam = st.checkbox("Generador de Exámenes", value=True)
+
 # Interfaz principal de chat
 col1, col2 = st.columns([1, 4])
 with col1:
@@ -135,7 +142,10 @@ if prompt := st.chat_input("¿En qué te ayudo, Jimena? 💬"):
     with st.chat_message("assistant"):
         with st.spinner("Pensando..."):
             from google.genai import types
-            from core.tools import calculate_ph, enzyme_kinetics, isoelectric_point
+            from core.tools import (
+                calculate_ph, enzyme_kinetics, isoelectric_point,
+                create_flashcards, create_exam
+            )
 
             # Construir lista de herramientas según toggles
             tools = []
@@ -145,6 +155,10 @@ if prompt := st.chat_input("¿En qué te ayudo, Jimena? 💬"):
                 tools.append(enzyme_kinetics)
             if use_pi_calc:
                 tools.append(isoelectric_point)
+            if use_flashcards:
+                tools.append(create_flashcards)
+            if use_exam:
+                tools.append(create_exam)
 
             # Agregar herramienta RAG si está disponible
             if st.session_state.rag_manager and st.session_state.rag_manager.store:
@@ -173,6 +187,12 @@ Fuiste creada por Cosimo para ayudar a Jimena (el amor de su vida) a pasar su ex
 - Para cálculos (pH, cinética, pI), USA las calculadoras proporcionadas
 - Para vías metabólicas o procesos, incluye diagramas Mermaid (```mermaid)
 - Cita fuentes con [Nombre de la Fuente] cuando uses los libros
+
+## Herramientas de estudio:
+- Para flashcards: Primero pregunta cuántas tarjetas quiere, luego usa create_flashcards
+- Para exámenes: Primero pregunta cuántas preguntas quiere, luego usa create_exam
+- Siempre basa las preguntas en el contenido de los documentos indexados
+- Los exámenes deben mezclar preguntas de opción múltiple y verdadero/falso
 
 ## Tu misión:
 - Que Jimena APRUEBE su examen

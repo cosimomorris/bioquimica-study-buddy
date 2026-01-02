@@ -94,3 +94,106 @@ def test_isoelectric_point_raises_on_insufficient_pkas():
 
     with pytest.raises(ValueError, match="[Aa]t least 2"):
         isoelectric_point(pka_values=[4.5])
+
+
+# Tests for create_flashcards
+def test_create_flashcards_basic():
+    """Create flashcards with valid input."""
+    from core.tools import create_flashcards
+
+    cards = [
+        {"pregunta": "¿Qué es la Km?", "respuesta": "Concentración de sustrato a Vmax/2"},
+        {"pregunta": "¿Qué es Vmax?", "respuesta": "Velocidad máxima de reacción"}
+    ]
+    result = create_flashcards(topic="Enzimas", cards=cards)
+
+    assert "Flashcards: Enzimas" in result
+    assert "Tarjeta 1" in result
+    assert "Tarjeta 2" in result
+    assert "¿Qué es la Km?" in result
+    assert "Concentración de sustrato" in result
+
+
+def test_create_flashcards_empty_raises():
+    """Empty cards list should raise ValueError."""
+    from core.tools import create_flashcards
+
+    with pytest.raises(ValueError, match="al menos una tarjeta"):
+        create_flashcards(topic="Enzimas", cards=[])
+
+
+# Tests for create_exam
+def test_create_exam_multiple_choice():
+    """Create exam with multiple choice questions."""
+    from core.tools import create_exam
+
+    questions = [
+        {
+            "tipo": "opcion_multiple",
+            "pregunta": "¿Cuál es la enzima reguladora?",
+            "opciones": ["Hexoquinasa", "PFK-1", "Piruvato quinasa", "Aldolasa"],
+            "respuesta_correcta": "B",
+            "explicacion": "PFK-1 es el punto de control"
+        }
+    ]
+    result = create_exam(topic="Glucólisis", questions=questions)
+
+    assert "Examen: Glucólisis" in result
+    assert "[Opción Múltiple]" in result
+    assert "A) Hexoquinasa" in result
+    assert "B) PFK-1" in result
+    assert "✓" in result
+
+
+def test_create_exam_true_false():
+    """Create exam with true/false questions."""
+    from core.tools import create_exam
+
+    questions = [
+        {
+            "tipo": "verdadero_falso",
+            "pregunta": "La glucólisis produce 4 ATP netos",
+            "opciones": None,
+            "respuesta_correcta": "Falso",
+            "explicacion": "Produce 2 ATP netos"
+        }
+    ]
+    result = create_exam(topic="Glucólisis", questions=questions)
+
+    assert "[V/F]" in result
+    assert "Falso" in result
+    assert "2 ATP netos" in result
+
+
+def test_create_exam_mixed():
+    """Create exam with mixed question types."""
+    from core.tools import create_exam
+
+    questions = [
+        {
+            "tipo": "opcion_multiple",
+            "pregunta": "¿Cuál es la enzima reguladora?",
+            "opciones": ["A", "B", "C", "D"],
+            "respuesta_correcta": "B",
+            "explicacion": "Explicación 1"
+        },
+        {
+            "tipo": "verdadero_falso",
+            "pregunta": "Afirmación de prueba",
+            "opciones": None,
+            "respuesta_correcta": "Verdadero",
+            "explicacion": "Explicación 2"
+        }
+    ]
+    result = create_exam(topic="Test", questions=questions)
+
+    assert "[Opción Múltiple]" in result
+    assert "[V/F]" in result
+
+
+def test_create_exam_empty_raises():
+    """Empty questions list should raise ValueError."""
+    from core.tools import create_exam
+
+    with pytest.raises(ValueError, match="al menos una pregunta"):
+        create_exam(topic="Test", questions=[])

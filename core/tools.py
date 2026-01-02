@@ -106,3 +106,114 @@ def isoelectric_point(pka_values: List[float]) -> float:
             return (sorted_pkas[1] + sorted_pkas[2]) / 2
     else:
         raise ValueError("Expected 2 or 3 pKa values")
+
+
+def create_flashcards(topic: str, cards: List[dict]) -> str:
+    """
+    Create flashcards for studying a biochemistry topic.
+
+    Use this tool when Jimena asks for flashcards, tarjetas de estudio,
+    or wants to memorize key concepts from the course materials.
+    First ask how many flashcards she wants, then create them based on
+    the indexed documents.
+
+    Args:
+        topic: The topic being studied (e.g., "Enzimas", "Glucólisis", "pH").
+        cards: List of flashcard dicts, each with:
+            - "pregunta": The question or prompt to test knowledge
+            - "respuesta": The answer or explanation
+
+    Returns:
+        Formatted flashcards as text ready to display.
+
+    Raises:
+        ValueError: If cards list is empty.
+
+    Example:
+        >>> create_flashcards("Enzimas", [
+        ...     {"pregunta": "¿Qué es la Km?", "respuesta": "Concentración de sustrato a Vmax/2"},
+        ...     {"pregunta": "¿Qué es Vmax?", "respuesta": "Velocidad máxima de reacción"}
+        ... ])
+    """
+    if not cards:
+        raise ValueError("Debe haber al menos una tarjeta")
+
+    output = f"📚 **Flashcards: {topic}**\n\n"
+
+    for i, card in enumerate(cards, 1):
+        pregunta = card.get("pregunta", "")
+        respuesta = card.get("respuesta", "")
+        output += f"🔹 **Tarjeta {i}**\n"
+        output += f"**Pregunta:** {pregunta}\n"
+        output += f"**Respuesta:** {respuesta}\n\n"
+
+    return output.strip()
+
+
+def create_exam(topic: str, questions: List[dict]) -> str:
+    """
+    Create a practice exam with multiple choice and true/false questions.
+
+    Use this tool when Jimena asks for an exam, quiz, examen, test, or wants
+    to practice with questions from the course materials.
+    First ask how many questions she wants, then create a mix of
+    multiple choice and true/false questions based on the indexed documents.
+
+    Args:
+        topic: The topic being tested (e.g., "Glucólisis", "Aminoácidos").
+        questions: List of question dicts, each with:
+            - "tipo": "opcion_multiple" or "verdadero_falso"
+            - "pregunta": The question text
+            - "opciones": List of 4 options A, B, C, D (for opcion_multiple only)
+            - "respuesta_correcta": The correct answer (letter or "Verdadero"/"Falso")
+            - "explicacion": Brief explanation of why it's correct
+
+    Returns:
+        Formatted exam as text ready to display.
+
+    Raises:
+        ValueError: If questions list is empty.
+
+    Example:
+        >>> create_exam("Glucólisis", [
+        ...     {
+        ...         "tipo": "opcion_multiple",
+        ...         "pregunta": "¿Cuál es la enzima reguladora principal?",
+        ...         "opciones": ["Hexoquinasa", "PFK-1", "Piruvato quinasa", "Aldolasa"],
+        ...         "respuesta_correcta": "B",
+        ...         "explicacion": "PFK-1 es el punto de control principal"
+        ...     },
+        ...     {
+        ...         "tipo": "verdadero_falso",
+        ...         "pregunta": "La glucólisis produce 4 ATP netos",
+        ...         "opciones": None,
+        ...         "respuesta_correcta": "Falso",
+        ...         "explicacion": "Produce 2 ATP netos"
+        ...     }
+        ... ])
+    """
+    if not questions:
+        raise ValueError("Debe haber al menos una pregunta")
+
+    output = f"📝 **Examen: {topic}**\n\n"
+
+    for i, q in enumerate(questions, 1):
+        tipo = q.get("tipo", "opcion_multiple")
+        pregunta = q.get("pregunta", "")
+        respuesta = q.get("respuesta_correcta", "")
+        explicacion = q.get("explicacion", "")
+
+        if tipo == "opcion_multiple":
+            opciones = q.get("opciones", [])
+            output += f"**{i}. [Opción Múltiple]** {pregunta}\n"
+            for j, opcion in enumerate(opciones):
+                letra = chr(65 + j)  # A, B, C, D
+                marca = " ✓" if letra == respuesta else ""
+                output += f"   {letra}) {opcion}{marca}\n"
+        else:  # verdadero_falso
+            output += f"**{i}. [V/F]** {pregunta}\n"
+            output += f"   **Respuesta:** {respuesta} ✓\n"
+
+        output += f"   **Explicación:** {explicacion}\n\n"
+
+    return output.strip()
