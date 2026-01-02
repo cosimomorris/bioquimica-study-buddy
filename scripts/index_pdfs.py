@@ -10,6 +10,7 @@ Usage:
 """
 import os
 import sys
+import unicodedata
 from pathlib import Path
 
 # Add project root to path for imports
@@ -65,6 +66,26 @@ def find_pdfs() -> list[Path]:
     return sorted(pdfs, key=lambda p: p.name.lower())
 
 
+def normalize_filename(name: str) -> str:
+    """
+    Normalize filename to ASCII-safe characters.
+
+    Removes accents and special Unicode characters that may cause
+    encoding issues with the Gemini API.
+
+    Args:
+        name: Original filename with possible accents.
+
+    Returns:
+        ASCII-safe version of the filename.
+    """
+    # Normalize to decomposed form (separate base char and accents)
+    normalized = unicodedata.normalize('NFD', name)
+    # Remove accent marks (combining characters)
+    ascii_safe = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+    return ascii_safe
+
+
 def main():
     """Main indexing function."""
     # Find PDFs
@@ -99,14 +120,14 @@ def main():
     error_count = 0
 
     for pdf_path in pdfs:
-        display_name = pdf_path.name
-        print(f"📤 Subiendo {display_name}...", end=" ", flush=True)
+        display_name = normalize_filename(pdf_path.name)
+        print(f"📤 Subiendo {pdf_path.name}...", end=" ", flush=True)
 
         try:
             rag_manager.upload_file(
                 file_path=str(pdf_path),
                 display_name=display_name,
-                timeout=600  # 10 minutes per file for large PDFs
+                timeout=900  # 15 minutes per file for large PDFs
             )
             print("✓")
             success_count += 1
