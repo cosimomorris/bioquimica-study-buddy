@@ -75,7 +75,9 @@ if st.session_state.client is None:
         st.session_state.client = get_client()
         st.session_state.rag_manager = RAGManager(st.session_state.client)
         # Intentar cargar almacén de documentos existente
-        if st.session_state.rag_manager.load_existing_store():
+        # Primero intenta desde secrets (para cloud), luego desde archivo local
+        store_name_from_secrets = st.secrets.get("RAG_STORE_NAME", None)
+        if st.session_state.rag_manager.load_existing_store(store_name_from_secrets):
             st.session_state.store_loaded = True
     except Exception as e:
         st.error(f"Error de conexión: {e}")

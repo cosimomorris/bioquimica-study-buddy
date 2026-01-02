@@ -35,24 +35,32 @@ class RAGManager:
         self.store_name: Optional[str] = None
         self.config_path = config_path or DEFAULT_CONFIG_PATH
 
-    def load_existing_store(self) -> bool:
+    def load_existing_store(self, store_name_override: Optional[str] = None) -> bool:
         """
-        Load an existing store from saved configuration.
+        Load an existing store from saved configuration or override.
+
+        Args:
+            store_name_override: Optional store name to use instead of reading from config.
+                               Useful for cloud deployments where config file doesn't exist.
 
         Returns:
             True if store was loaded successfully, False otherwise.
         """
-        if not self.config_path.exists():
+        store_name = store_name_override
+
+        # If no override, try to load from config file
+        if not store_name and self.config_path.exists():
+            try:
+                with open(self.config_path) as f:
+                    config = json.load(f)
+                store_name = config.get("store_name")
+            except Exception:
+                pass
+
+        if not store_name:
             return False
 
         try:
-            with open(self.config_path) as f:
-                config = json.load(f)
-
-            store_name = config.get("store_name")
-            if not store_name:
-                return False
-
             # Verify the store still exists on Gemini
             self.store = self.client.file_search_stores.get(name=store_name)
             self.store_name = store_name
