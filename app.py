@@ -87,42 +87,14 @@ with st.sidebar:
     st.success("¡Conectado a Gemini!")
 
     # Mostrar estado del almacén de documentos
-    if st.session_state.store_loaded:
-        st.info("📚 Documentos cargados de la sesión anterior")
-    st.divider()
-
-    # Subir PDFs
-    st.subheader("Subir Documentos")
-    uploaded_file = st.file_uploader(
-        "Sube libros de texto o apuntes en PDF",
-        type=["pdf", "txt", "md"],
-        help="Los documentos serán indexados para búsqueda"
-    )
-
-    if uploaded_file and st.session_state.rag_manager:
-        if st.button("Indexar Documento"):
-            with st.spinner("Indexando documento..."):
-                # Guardar en archivo temporal y subir
-                import tempfile
-                import os
-
-                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as f:
-                    f.write(uploaded_file.getvalue())
-                    temp_path = f.name
-
-                try:
-                    if st.session_state.rag_manager.store is None:
-                        st.session_state.rag_manager.create_store("bioquimica-study-buddy")
-
-                    st.session_state.rag_manager.upload_file(
-                        file_path=temp_path,
-                        display_name=uploaded_file.name
-                    )
-                    st.success(f"Indexado: {uploaded_file.name}")
-                except Exception as e:
-                    st.error(f"Error al indexar: {e}")
-                finally:
-                    os.unlink(temp_path)
+    if st.session_state.store_loaded and st.session_state.rag_manager:
+        doc_count = st.session_state.rag_manager.get_document_count()
+        if doc_count > 0:
+            st.info(f"📚 {doc_count} documentos listos")
+        else:
+            st.info("📚 Documentos cargados")
+    else:
+        st.warning("⚠️ Documentos no indexados. Ejecuta: python scripts/index_pdfs.py")
 
     st.divider()
 

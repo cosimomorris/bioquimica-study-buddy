@@ -138,3 +138,22 @@ class RAGManager:
                 file_search_store_names=[self.store.name]
             )
         )
+
+    def get_document_count(self) -> int:
+        """
+        Get the number of documents in the current store.
+
+        Returns:
+            Number of documents, or 0 if no store is loaded.
+        """
+        if self.store is None or self.store_name is None:
+            return 0
+
+        try:
+            # List files in the store to count them
+            files = list(self.client.file_search_stores.files.list(
+                file_search_store_name=self.store_name
+            ))
+            return len(files)
+        except Exception:
+            return 0
